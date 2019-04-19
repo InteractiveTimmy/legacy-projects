@@ -1,0 +1,16 @@
+oimo.controlRot will prevent rotation from occurring, must reset on each frame.
+
+Height = 420px;
+hips = 60px;
+Leg Length 210px;
+lower leg 110px;
+upper leg 100px;
+lower torso 15px;
+middle torso 75px;
+upper torso 45px;
+shoulder width 100px; // Divide this by 2
+Neck 25px;
+head 50px
+upper arm 50px
+lower arm 60px
+hand 50px;

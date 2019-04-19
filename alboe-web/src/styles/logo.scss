@@ -1,0 +1,18 @@
+.logo {
+  background-color: #0000;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+  height: 16em;
+  width: 9em;
+
+  .image {
+
+  }
+  
+  .title {
+    color: #fff;
+    font-size: 2em;
+  }
+}
