@@ -1,0 +1,25 @@
+module.exports =
+{
+  "input":[
+    [
+      "move":"p0a0",
+      "look":"p0a1",
+      "up":"p0b0",
+      "down":"p0b1",
+      "refresh":"p0b2",
+      "modify":"p0b3",
+      "menu":"p0b9",
+      "hud":"p0b8",
+      "util-a":"p0b4",
+      "util-b":"p0b5",
+      "util-c":"p0b10",
+      "util-d":"p0b11",
+      "weapon-a":"p0b12",
+      "weapon-b":"p0b13",
+      "weapon-c":"p0b14",
+      "weapon-d":"p0b15",
+      "primary":"p0b7",
+      "secondary":"p0b6"
+    ]
+  ]
+}

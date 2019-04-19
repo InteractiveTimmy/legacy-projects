@@ -1,0 +1,226 @@
+'use strict';
+
+class Input
+{
+  constructor ( p )
+  {
+    console.log( p );
+
+    /*
+    NOTE:
+    moving all data to dynamic state object in next push
+    k0, m0, j0, values will be normalized to 0.0:1.0 to support full analog, deadzone should be ~0.0:0.1; Mouse special exception.
+    k#b###
+    m#b###
+    j#b###
+    mouse { 0:left, 1:middle, 2:right }
+
+    states:{ code:{ value:NORMALIZED, name:NAME } }
+    */
+
+    this.states = { };
+
+    this.analogs = [ 'm0mx', 'm0my', 'm0w+', 'm0w-' ];
+    this.players = [ ];
+
+    this.templates = { };
+    this.templates.xbox360 =
+    {
+      "b0":{ "name":"A", "value":0 },
+      "b1":{ "name":"B", "value":0 },
+      "b2":{ "name":"X", "value":0 },
+      "b3":{ "name":"Y", "value":0 },
+      "b4":{ "name":"LB", "value":0 },
+      "b5":{ "name":"RB", "value":0 },
+      "b6":{ "name":"LS", "value":0 },
+      "b7":{ "name":"RS", "value":0 },
+      "b8":{ "name":"Start", "value":0 },
+      "b9":{ "name":"Back", "value":0 },
+      "b10":{ "name":"Menu", "value":0 },
+      "b11":{ "name":"DPAD-Up", "value":0 },
+      "b12":{ "name":"DPAD-Down", "value":0 },
+      "b13":{ "name":"DPAD-Left", "value":0 },
+      "b14":{ "name":"DPAD-Right", "value":0 },
+      "a0-":{ "name":"LS-Left", "value":0 },
+      "a0+":{ "name":"LS-Right", "value":0 },
+      "a1+":{ "name":"LS-Up", "value":0 },
+      "a1-":{ "name":"LS-Down", "value":0 },
+      "a2":{ "name":"LT", "value":0 },
+      "a3-":{ "name":"RS-Left", "value":0 },
+      "a3+":{ "name":"RS-Right", "value":0 },
+      "a4+":{ "name":"RS-Up", "value":0 },
+      "a4-":{ "name":"RS-Down", "value":0 },
+      "a5":{ "name":"RT", "value":0 }
+    };
+
+    this.keyboard = new pc.Keyboard( window );
+    this.keyboard.on( "keydown", this.keyboardDown, this );
+    this.keyboard.on( "keyup", this.keyboardUp, this );
+
+    this.mouse = new pc.Mouse( p.element );
+    this.mouse.on( "mousedown", this.mouseDown, this );
+    this.mouse.on( "mouseup", this.mouseUp, this );
+    this.mouse.on( "mousemove", this.mouseMove, this );
+    this.mouse.on( "mousewheel", this.mouseWheel, this );
+
+    this.pads = new pc.GamePads( );
+    this.pads.read = [ ];
+    this.pads.config = [ ];
+    this.pads.stats = { };
+
+    this.playerInput = [ ];
+
+    // test area -- begin
+    console.log( this.mouse.move );
+    this.generateNewPad( { "n":0, "template":"xbox360" } );
+    this.generatePlayer( );
+    this.setPlayerInput( {
+      "player":0,
+      "code":"j0b0",
+      "action":"click"
+    } );
+    // test area -- end
+  }
+
+  generatePlayerInput ( p )
+  {
+    this.playerInput.push( { } );
+  }
+
+  applyDeadZone ( p )
+  {
+
+  }
+
+  generatePlayer ( )
+  {
+    this.players.push( { } );
+  }
+
+  generateInput ( p ) // p.code
+  {
+    if ( !this.states.hasOwnProperty( p.code ) )
+    { this.states[p.code] = { "value":0 }; }
+  }
+
+  setPlayerInput ( p ) // p.player, p.code, p.action
+  {
+    if ( this.players[p.player] )
+    {
+      this.generateInput( p.code );
+      this.players[p.player][p.action] = this.states[p.code];
+    }
+  }
+
+  generateNewPad ( p ) // { "template" }
+  {
+    let padObject = this.templates[p.template];
+
+    for ( let key in padObject )
+    {
+      this.states[`j${p.n}${key}`] = padObject[key];
+    }
+
+    return padObject;
+  }
+
+  getPadValues ( )
+  {
+    this.pads.read = this.pads.poll( );
+
+    for ( let x in this.pads.read )
+    {
+      for ( let b in this.pads.read[x].pad.buttons )
+      {
+        this.states[`j${x}b${b}`].value = + this.pads.read[x].pad.buttons[b].pressed;
+      }
+
+      this.states[`j${x}a${0}-`].value = ( this.pads.read[x].pad.axes[0] < 0 ) ? this.pads.read[x].pad.axes[0] * -1 : 0;
+      this.states[`j${x}a${0}+`].value = ( this.pads.read[x].pad.axes[0] > 0 ) ? this.pads.read[x].pad.axes[0] : 0;
+      this.states[`j${x}a${1}-`].value = ( this.pads.read[x].pad.axes[1] < 0 ) ? this.pads.read[x].pad.axes[1] * -1 : 0;
+      this.states[`j${x}a${1}+`].value = ( this.pads.read[x].pad.axes[1] > 0 ) ? this.pads.read[x].pad.axes[1] : 0;
+      this.states[`j${x}a${3}-`].value = ( this.pads.read[x].pad.axes[3] < 0 ) ? this.pads.read[x].pad.axes[3] * -1 : 0;
+      this.states[`j${x}a${3}+`].value = ( this.pads.read[x].pad.axes[3] > 0 ) ? this.pads.read[x].pad.axes[3] : 0;
+      this.states[`j${x}a${4}-`].value = ( this.pads.read[x].pad.axes[4] < 0 ) ? this.pads.read[x].pad.axes[4] * -1 : 0;
+      this.states[`j${x}a${4}+`].value = ( this.pads.read[x].pad.axes[4] > 0 ) ? this.pads.read[x].pad.axes[4] : 0;
+      this.states[`j${x}a${2}`].value = ( this.pads.read[x].pad.axes[2] + 1 ) / 2;
+      this.states[`j${x}a${5}`].value = ( this.pads.read[x].pad.axes[5] + 1 ) / 2;
+    }
+  }
+
+  clearAnalog ( )
+  {
+    for ( let x in this.analogs )
+    {
+      if ( this.states[this.analogs[x]] )
+      { this.states[this.analogs[x]].value = 0; }
+    }
+  }
+
+  keyboardDown ( e )
+  {
+    if ( !this.states.hasOwnProperty( `k0b${e.event.keyCode}` ) )
+    { this.states[`k0b${e.event.keyCode}`] = { "value":0, "name":e.event.key.toUpperCase( ) }; }
+
+    if ( this.states[`k0b${e.event.keyCode}`].value != 0 )
+    { return; }
+    else
+    { this.states[`k0b${e.event.keyCode}`].value = 1; }
+    e.event.preventDefault();
+  }
+
+  keyboardUp ( e )
+  {
+    if ( !this.states.hasOwnProperty( `k0b${e.event.keyCode}` ) )
+    { this.states[`k0b${e.event.keyCode}`] = { "value":0, "name":e.event.key.toUpperCase( ) }; }
+
+    this.states[`k0b${e.event.keyCode}`].value = 0;
+    e.event.preventDefault();
+  }
+
+  mouseDown ( e )
+  {
+    if ( !this.states.hasOwnProperty( `m0b${e.event.button}` ) )
+    { this.states[`m0b${e.event.button}`] = { "value":0, "name":`Mouse ${e.event.button}` }; }
+
+    this.states[`m0b${e.event.button}`].value = 1;
+  }
+
+  mouseUp ( e )
+  {
+    if ( !this.states.hasOwnProperty( `m0b${e.event.button}` ) )
+    { this.states[`m0b${e.event.button}`] = { "value":0, "name":`Mouse ${e.event.button}` }; }
+
+    this.states[`m0b${e.event.button}`].value = 0;
+    console.log( this.states );
+  }
+
+  mouseMove ( e )
+  {
+    if ( !this.states.hasOwnProperty( 'm0mx' ) )
+    { this.states.m0mx = { "value":0, "name":"Mouse-Move-X" }; }
+    if ( !this.states.hasOwnProperty( 'm0my' ) )
+    { this.states.m0my = { "value":0, "name":"Mouse-Move-Y" }; }
+
+    this.states.m0mx.value = e.dx / 10;
+    this.states.m0my.value = e.dy / 10;
+  }
+
+  mouseWheel ( e )
+  {
+    if ( e.wheel > 0 )
+    {
+      if ( !this.states.hasOwnProperty( 'm0w-' ) )
+      { this.states['m0w-'] = { "value":0, "name":"Mouse-Wheel-Down" }; }
+      this.states['m0w-'].value = 1;
+    }
+    else if ( e.wheel < 0 )
+    {
+      if ( !this.states.hasOwnProperty( 'm0w+' ) )
+      { this.states['m0w+'] = { "value":0, "name":"Mouse-Wheel-Up" }; }
+      this.states['m0w+'].value = 1;
+    }
+  }
+}
+
+module.exports = ( p ) => { return new Input( p ); }
